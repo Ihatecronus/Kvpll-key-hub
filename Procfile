@@ -1,1 +1,1 @@
-web: cd bot && npm install && npm start
+web: cd bot && npm ci && npm start
