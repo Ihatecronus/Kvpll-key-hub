@@ -17,7 +17,7 @@ local USER_ID = Player.UserId
 local USERNAME = Player.Name
 
 -- ============================================================================
--- KEY VERIFICATION FUNCTION (Server-based)
+-- KEY VERIFICATION FUNCTION (Server-based with timeout)
 -- ============================================================================
 local function VerifyKeyOnServer(inputKey)
     local success, result = pcall(function()
@@ -28,13 +28,34 @@ local function VerifyKeyOnServer(inputKey)
             username = USERNAME
         })
         
-        local response = httpService:PostAsync(
-            KEY_SERVER_URL .. API_KEY_PATH,
-            payload,
-            Enum.HttpContentType.ApplicationJson
-        )
+        -- Build full URL
+        local fullURL = KEY_SERVER_URL
+        if not fullURL:match("^https?://") then
+            fullURL = "https://" .. fullURL
+        end
+        if not fullURL:match("/$") then
+            fullURL = fullURL .. API_KEY_PATH
+        else
+            fullURL = fullURL .. API_KEY_PATH:sub(2)
+        end
         
-        return httpService:JSONDecode(response)
+        print("[Key System] Verifying key at: " .. fullURL)
+        
+        -- Use RequestAsync with timeout instead of PostAsync
+        local response = httpService:RequestAsync({
+            Url = fullURL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = payload
+        })
+        
+        if response.StatusCode ~= 200 then
+            return nil, "Server returned: " .. response.StatusCode .. " - " .. (response.Body or "No response")
+        end
+        
+        return httpService:JSONDecode(response.Body)
     end)
     
     return success, result
@@ -128,7 +149,7 @@ submitBtn.MouseButton1Click:Connect(function()
     local success, response = VerifyKeyOnServer(key)
     
     if not success then
-        statusLabel.Text = "❌ Connection Error\n\nMake sure the server URL is correct"
+        statusLabel.Text = "❌ Error\n\n" .. tostring(response)
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         submitBtn.Enabled = true
         return
