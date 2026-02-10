@@ -1,0 +1,39 @@
+name: 🤖 Sync Bot to Replit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bot/**'
+      - '.github/workflows/sync-replit.yml'
+
+jobs:
+  sync-replit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+      
+    - name: 📦 Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.REPLIT_SSH_KEY }}" > ~/.ssh/replit_key
+        chmod 600 ~/.ssh/replit_key
+        ssh-keyscan -H replit.com >> ~/.ssh/known_hosts 2>/dev/null || true
+        
+    - name: 📤 Sync bot folder to Replit
+      run: |
+        rsync -avz --delete \
+          --exclude node_modules \
+          --exclude keys.db \
+          --exclude package-lock.json \
+          --exclude .env \
+          -e "ssh -i ~/.ssh/replit_key -o StrictHostKeyChecking=no" \
+          ./bot/ \
+          ${{ secrets.REPLIT_USER }}@${{ secrets.REPLIT_HOST }}:bot/
+          
+    - name: 🔔 Notify on Slack (optional)
+      if: success()
+      run: |
+        echo "✅ Bot synced to Replit successfully!"
