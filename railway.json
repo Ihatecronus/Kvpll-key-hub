@@ -1,10 +1,5 @@
 {
   "build": {
-    "builder": "nixpacks"
-  },
-  "deploy": {
-    "startCommand": "cd bot && npm ci && npm start",
-    "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 5
+    "builder": "dockerfile"
   }
 }
