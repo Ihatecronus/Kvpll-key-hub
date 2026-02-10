@@ -9,7 +9,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 -- SERVER CONFIGURATION
 -- Update this URL to your Railway bot URL
 -- ============================================================================
-local KEY_SERVER_URL = "https://your-railway-url.railway.app"  -- Replace with your Railway URL
+local KEY_SERVER_URL = "https://joyful-wonder-production-2af6.up.railway.app"  -- Your Railway URL
 local API_KEY_PATH = "/verify-key"
 
 -- Get the player's user ID (for key validation)
